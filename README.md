@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Movie Tracker 🎬
 
-## Getting Started
+A full-stack web application for tracking your favorite movies and TV shows. Built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
-First, run the development server:
+## 🚀 Live Demo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+[**View Live App**](https://movie-buddy-sigma.vercel.app/)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features (Planned)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **🔍 Search & Discovery**: Find movies and TV shows using The Movie Database (TMDB) API
+- **📋 Personal Watchlists**: Create and manage custom lists of your favorite content
+- **⭐ Rating & Reviews**: Rate movies and TV shows with a 5-star system and write reviews
+- **📊 Watch Status**: Track what you're currently watching, want to watch, or have completed
+- **📱 Responsive Design**: Beautiful, modern UI that works on all devices
+- **🔐 User Authentication**: Secure user accounts with Supabase Auth
+- **⚡ Real-time Updates**: Live updates across all your devices
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS v4
+- **Database**: Supabase (PostgreSQL) - *Coming Soon*
+- **Authentication**: Supabase Auth - *Coming Soon*
+- **External API**: The Movie Database (TMDB) - *Coming Soon*
+- **Deployment**: Vercel ✅
+- **Development**: ESLint, Prettier ✅
 
-To learn more about Next.js, take a look at the following resources:
+## 🚦 Getting Started
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- TMDB API key
 
-## Deploy on Vercel
+### Installation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/Movie-Buddy.git
+   cd Movie-Buddy
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open [http://localhost:3000](http://localhost:3000)** in your browser
+
+## 🗄️ Database Schema (Planned)
+
+The application will use a PostgreSQL database with the following main tables:
+
+- **users**: User profiles and preferences
+- **lists**: Custom watchlists created by users
+- **list_items**: Items within each watchlist
+- **ratings**: User ratings and reviews
+- **watch_status**: Current watching status and progress
+
+## 🚀 Deployment
+
+This app is automatically deployed to Vercel with CI/CD:
+
+1. **Push to main branch** triggers automatic deployment ✅
+2. **Preview deployments** are created for pull requests ✅
+3. **Environment variables** will be configured in Vercel dashboard
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [The Movie Database (TMDB)](https://www.themoviedb.org/) for movie and TV show data
+- [Next.js](https://nextjs.org/) for the amazing React framework
+- [Supabase](https://supabase.io/) for backend infrastructure
+- [Vercel](https://vercel.com/) for deployment and hosting
