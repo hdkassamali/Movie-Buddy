@@ -67,28 +67,16 @@ All tables have RLS policies that ensure:
 
 ## Testing the Schema
 
-After migration, you can test the schema with sample data:
+After running the migration, validate the schema using the test queries in [`test_schema.sql`](./test_schema.sql):
 
-```sql
--- Insert a test user (this should match your auth.uid())
-INSERT INTO users (email, username) VALUES ('test@example.com', 'testuser');
+1. **Copy the test queries** from `test_schema.sql`
+2. **Run them in Supabase SQL Editor** to validate:
+   - Data insertion works correctly
+   - Constraints prevent invalid data
+   - Foreign key relationships function properly
+   - RLS policies are active
 
--- Create a test list
-INSERT INTO lists (user_id, name, description) 
-VALUES (auth.uid(), 'My Favorites', 'My favorite movies');
-
--- Add a movie to the list
-INSERT INTO list_items (list_id, tmdb_id, media_type) 
-VALUES ((SELECT id FROM lists WHERE name = 'My Favorites'), 550, 'movie');
-
--- Add a rating
-INSERT INTO ratings (user_id, tmdb_id, media_type, rating, review) 
-VALUES (auth.uid(), 550, 'movie', 5, 'Amazing movie!');
-
--- Track watch status
-INSERT INTO watch_status (user_id, tmdb_id, media_type, status) 
-VALUES (auth.uid(), 550, 'movie', 'watched');
-```
+⚠️ **Important**: These are test queries only - do not run in production!
 
 ## Next Steps
 
