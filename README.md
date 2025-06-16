@@ -83,7 +83,9 @@ This app is automatically deployed to Vercel with CI/CD:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. 
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE.md)
 
 ## 🙏 Acknowledgments
 
