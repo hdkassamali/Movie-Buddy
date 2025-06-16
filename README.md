@@ -55,15 +55,27 @@ A full-stack web application for tracking your favorite movies and TV shows. Bui
 
 4. **Open [http://localhost:3000](http://localhost:3000)** in your browser
 
-## 🗄️ Database Schema (Planned)
+## 🗄️ Database Schema
 
-The application will use a PostgreSQL database with the following main tables:
+The application uses a PostgreSQL database with the following main tables:
 
 - **users**: User profiles and preferences
 - **lists**: Custom watchlists created by users
 - **list_items**: Items within each watchlist
 - **ratings**: User ratings and reviews
 - **watch_status**: Current watching status and progress
+
+### Database Setup
+
+Database migrations and schema are available in the [`migrations/`](./migrations/) directory:
+
+- **[`migrations/001_initial_schema.sql`](./migrations/001_initial_schema.sql)**: Complete database schema with tables, indexes, and Row Level Security policies
+- **[`migrations/README.md`](./migrations/README.md)**: Detailed setup instructions and migration guide
+
+To set up the database:
+1. Follow the instructions in [`migrations/README.md`](./migrations/README.md)
+2. Execute the SQL migration in your Supabase SQL Editor
+3. Verify the schema was created correctly using the provided test queries
 
 ## 🚀 Deployment
 
