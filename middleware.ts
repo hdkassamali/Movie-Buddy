@@ -45,11 +45,11 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to login if user is not authenticated and trying to access protected route
   if (isProtectedRoute && !user) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Redirect authenticated users away from auth pages
-  const authRoutes = ['/auth/login', '/auth/signup'];
+  const authRoutes = ['/login', '/register'];
   const isAuthRoute = authRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
