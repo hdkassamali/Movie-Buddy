@@ -1,7 +1,5 @@
 import { useQuery, useInfiniteQuery, QueryClient } from '@tanstack/react-query';
 import {
-  searchMovies,
-  searchTVShows,
   searchMulti,
   getMovieDetails,
   getTVShowDetails,
@@ -9,7 +7,6 @@ import {
   getTVShowCredits,
   discoverMovies,
   discoverTVShows,
-  getGenres,
   getTrending,
   TMDBApiError,
 } from '../lib/tmdb';
@@ -75,7 +72,20 @@ export function useSearchMovies(
 ) {
   return useQuery({
     queryKey: tmdbKeys.searchMovies(query, options),
-    queryFn: () => searchMovies(query, options),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        query,
+        ...(options.page && { page: options.page.toString() }),
+        ...(options.year && { year: options.year.toString() }),
+        ...(options.language && { language: options.language }),
+      });
+
+      const response = await fetch(`/api/search/movies?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to search movies');
+      }
+      return response.json();
+    },
     enabled: queryOptions.enabled !== false && !!query.trim(),
     staleTime: queryOptions.staleTime ?? 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
@@ -101,7 +111,22 @@ export function useSearchTVShows(
 ) {
   return useQuery({
     queryKey: tmdbKeys.searchTVShows(query, options),
-    queryFn: () => searchTVShows(query, options),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        query,
+        ...(options.page && { page: options.page.toString() }),
+        ...(options.firstAirDateYear && {
+          firstAirDateYear: options.firstAirDateYear.toString(),
+        }),
+        ...(options.language && { language: options.language }),
+      });
+
+      const response = await fetch(`/api/search/tv?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to search TV shows');
+      }
+      return response.json();
+    },
     enabled: queryOptions.enabled !== false && !!query.trim(),
     staleTime: queryOptions.staleTime ?? 5 * 60 * 1000,
     retry: (failureCount, error) => {
@@ -319,7 +344,18 @@ export function useGenres(
 ) {
   return useQuery({
     queryKey: tmdbKeys.genreList(type, language),
-    queryFn: () => getGenres(type, language),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        type,
+        language,
+      });
+
+      const response = await fetch(`/api/genres?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch genres');
+      }
+      return response.json();
+    },
     enabled: queryOptions.enabled !== false,
     staleTime: queryOptions.staleTime ?? 24 * 60 * 60 * 1000, // 24 hours - genres rarely change
     retry: (failureCount, error) => {
