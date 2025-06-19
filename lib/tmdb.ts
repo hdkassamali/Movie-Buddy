@@ -74,6 +74,7 @@ async function tmdbFetch<T>(
   endpoint: string,
   options: TMDBApiOptions = {}
 ): Promise<T> {
+  // Server-side only API key access
   const apiKey = process.env.TMDB_API_KEY;
 
   if (!apiKey) {
