@@ -8,6 +8,7 @@ import CastGrid from '@/components/CastGrid/CastGrid';
 import CrewSection from '@/components/CrewSection/CrewSection';
 import ProductionCompanies from '@/components/ProductionCompanies/ProductionCompanies';
 import SeasonsSection from '@/components/SeasonsSection/SeasonsSection';
+import { AddToListSection } from '@/components/AddToListSection/AddToListSection';
 
 interface TVShowPageProps {
   params: Promise<{
@@ -90,16 +91,19 @@ export default async function TVShowPage({ params }: TVShowPageProps) {
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <MetadataCard
-              posterUrl={posterUrl || undefined}
-              title={show.name}
-              rating={show.vote_average}
-              voteCount={show.vote_count}
-              genres={show.genres}
-              releaseDate={show.first_air_date}
-              status={show.status}
-              metadata={metadata}
-            />
+            <div className="lg:col-span-1">
+              <AddToListSection tmdbId={tvId} mediaType="tv" />
+              <MetadataCard
+                posterUrl={posterUrl || undefined}
+                title={show.name}
+                rating={show.vote_average}
+                voteCount={show.vote_count}
+                genres={show.genres}
+                releaseDate={show.first_air_date}
+                status={show.status}
+                metadata={metadata}
+              />
+            </div>
 
             <div className="lg:col-span-2 space-y-8">
               <OverviewSection overview={show.overview} />
