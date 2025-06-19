@@ -1,454 +1,215 @@
-import { useQuery, useInfiniteQuery, QueryClient } from '@tanstack/react-query';
-import {
-  searchMulti,
-  getMovieDetails,
-  getTVShowDetails,
-  getMovieCredits,
-  getTVShowCredits,
-  discoverMovies,
-  discoverTVShows,
-  getTrending,
-  TMDBApiError,
-} from '../lib/tmdb';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import type {
-  TMDBDiscoverMovieResponse,
-  TMDBDiscoverTVResponse,
+  TMDBMovieDetails,
+  TMDBTVShowDetails,
+  TMDBCredits,
+  TMDBMovieSearchResponse,
+  TMDBTVShowSearchResponse,
+  TMDBGenreList,
   MovieSearchOptions,
   TVSearchOptions,
-  DetailOptions,
 } from '../types/tmdb';
 
-// Query keys for consistent caching
-export const tmdbKeys = {
-  all: ['tmdb'] as const,
-  search: () => [...tmdbKeys.all, 'search'] as const,
-  searchMovies: (query: string, options?: MovieSearchOptions) =>
-    [...tmdbKeys.search(), 'movies', query, options] as const,
-  searchTVShows: (query: string, options?: TVSearchOptions) =>
-    [...tmdbKeys.search(), 'tv', query, options] as const,
-  searchMulti: (
-    query: string,
-    options?: { page?: number; language?: string }
-  ) => [...tmdbKeys.search(), 'multi', query, options] as const,
+// Type aliases for convenience
+export type MovieDetails = TMDBMovieDetails;
+export type TVShowDetails = TMDBTVShowDetails;
+export type MovieCredits = TMDBCredits;
+export type TVShowCredits = TMDBCredits;
 
-  details: () => [...tmdbKeys.all, 'details'] as const,
-  movieDetails: (id: number, options?: DetailOptions) =>
-    [...tmdbKeys.details(), 'movie', id, options] as const,
-  tvDetails: (id: number, options?: DetailOptions) =>
-    [...tmdbKeys.details(), 'tv', id, options] as const,
+// Helper function to create consistent API clients for server-side routes
+function createTMDBClient() {
+  return {
+    movies: {
+      getDetails: async (id: number): Promise<MovieDetails> => {
+        const response = await fetch(`/api/movie/${id}`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch movie details: ${response.statusText}`
+          );
+        }
+        return response.json();
+      },
+      getCredits: async (id: number): Promise<MovieCredits> => {
+        const response = await fetch(`/api/movie/${id}/credits`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch movie credits: ${response.statusText}`
+          );
+        }
+        return response.json();
+      },
+      search: async (
+        query: string,
+        options: MovieSearchOptions = {}
+      ): Promise<TMDBMovieSearchResponse> => {
+        const params = new URLSearchParams({ query });
+        if (options.page) params.append('page', options.page.toString());
+        if (options.year) params.append('year', options.year.toString());
+        if (options.language) params.append('language', options.language);
 
-  credits: () => [...tmdbKeys.all, 'credits'] as const,
-  movieCredits: (id: number, options?: { language?: string }) =>
-    [...tmdbKeys.credits(), 'movie', id, options] as const,
-  tvCredits: (id: number, options?: { language?: string }) =>
-    [...tmdbKeys.credits(), 'tv', id, options] as const,
+        const response = await fetch(`/api/search/movies?${params}`);
+        if (!response.ok) {
+          throw new Error(`Failed to search movies: ${response.statusText}`);
+        }
+        return response.json();
+      },
+    },
+    tv: {
+      getDetails: async (id: number): Promise<TVShowDetails> => {
+        const response = await fetch(`/api/tv/${id}`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch TV show details: ${response.statusText}`
+          );
+        }
+        return response.json();
+      },
+      getCredits: async (id: number): Promise<TVShowCredits> => {
+        const response = await fetch(`/api/tv/${id}/credits`);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch TV show credits: ${response.statusText}`
+          );
+        }
+        return response.json();
+      },
+      search: async (
+        query: string,
+        options: TVSearchOptions = {}
+      ): Promise<TMDBTVShowSearchResponse> => {
+        const params = new URLSearchParams({ query });
+        if (options.page) params.append('page', options.page.toString());
+        if (options.firstAirDateYear)
+          params.append(
+            'firstAirDateYear',
+            options.firstAirDateYear.toString()
+          );
+        if (options.language) params.append('language', options.language);
 
-  discover: () => [...tmdbKeys.all, 'discover'] as const,
-  discoverMovies: (options?: Record<string, unknown>) =>
-    [...tmdbKeys.discover(), 'movies', options] as const,
-  discoverTVShows: (options?: Record<string, unknown>) =>
-    [...tmdbKeys.discover(), 'tv', options] as const,
+        const response = await fetch(`/api/search/tv?${params}`);
+        if (!response.ok) {
+          throw new Error(`Failed to search TV shows: ${response.statusText}`);
+        }
+        return response.json();
+      },
+    },
+    genres: {
+      get: async (
+        type: 'movie' | 'tv',
+        language = 'en-US'
+      ): Promise<TMDBGenreList> => {
+        const params = new URLSearchParams({ type, language });
+        const response = await fetch(`/api/genres?${params}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch genres: ${response.statusText}`);
+        }
+        return response.json();
+      },
+    },
+  };
+}
 
-  genres: () => [...tmdbKeys.all, 'genres'] as const,
-  genreList: (type: 'movie' | 'tv', language?: string) =>
-    [...tmdbKeys.genres(), type, language] as const,
+// React Query hooks with proper caching
+export function useMovieDetails(
+  id: number,
+  queryOptions?: Omit<UseQueryOptions<MovieDetails>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: ['movie', 'details', id],
+    queryFn: () => createTMDBClient().movies.getDetails(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in newer React Query)
+    ...queryOptions,
+  });
+}
 
-  trending: () => [...tmdbKeys.all, 'trending'] as const,
-  trendingList: (
-    mediaType: 'movie' | 'tv' | 'person' | 'all',
-    timeWindow: 'day' | 'week',
-    options?: Record<string, unknown>
-  ) => [...tmdbKeys.trending(), mediaType, timeWindow, options] as const,
-};
+export function useMovieCredits(
+  id: number,
+  queryOptions?: Omit<UseQueryOptions<MovieCredits>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: ['movie', 'credits', id],
+    queryFn: () => createTMDBClient().movies.getCredits(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...queryOptions,
+  });
+}
+
+export function useTVShowDetails(
+  id: number,
+  queryOptions?: Omit<UseQueryOptions<TVShowDetails>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: ['tv', 'details', id],
+    queryFn: () => createTMDBClient().tv.getDetails(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...queryOptions,
+  });
+}
+
+export function useTVShowCredits(
+  id: number,
+  queryOptions?: Omit<UseQueryOptions<TVShowCredits>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: ['tv', 'credits', id],
+    queryFn: () => createTMDBClient().tv.getCredits(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...queryOptions,
+  });
+}
 
 // Search hooks
 export function useSearchMovies(
   query: string,
   options: MovieSearchOptions = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
+  queryOptions?: Omit<
+    UseQueryOptions<TMDBMovieSearchResponse>,
+    'queryKey' | 'queryFn'
+  >
 ) {
   return useQuery({
-    queryKey: tmdbKeys.searchMovies(query, options),
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        query,
-        ...(options.page && { page: options.page.toString() }),
-        ...(options.year && { year: options.year.toString() }),
-        ...(options.language && { language: options.language }),
-      });
-
-      const response = await fetch(`/api/search/movies?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to search movies');
-      }
-      return response.json();
-    },
-    enabled: queryOptions.enabled !== false && !!query.trim(),
-    staleTime: queryOptions.staleTime ?? 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error) => {
-      // Don't retry if it's a client error or rate limit
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
+    queryKey: ['search', 'movies', query, options],
+    queryFn: () => createTMDBClient().movies.search(query, options),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    enabled: query.length > 0,
+    ...queryOptions,
   });
 }
 
 export function useSearchTVShows(
   query: string,
   options: TVSearchOptions = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
+  queryOptions?: Omit<
+    UseQueryOptions<TMDBTVShowSearchResponse>,
+    'queryKey' | 'queryFn'
+  >
 ) {
   return useQuery({
-    queryKey: tmdbKeys.searchTVShows(query, options),
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        query,
-        ...(options.page && { page: options.page.toString() }),
-        ...(options.firstAirDateYear && {
-          firstAirDateYear: options.firstAirDateYear.toString(),
-        }),
-        ...(options.language && { language: options.language }),
-      });
-
-      const response = await fetch(`/api/search/tv?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to search TV shows');
-      }
-      return response.json();
-    },
-    enabled: queryOptions.enabled !== false && !!query.trim(),
-    staleTime: queryOptions.staleTime ?? 5 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
+    queryKey: ['search', 'tv', query, options],
+    queryFn: () => createTMDBClient().tv.search(query, options),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    enabled: query.length > 0,
+    ...queryOptions,
   });
 }
 
-export function useSearchMulti(
-  query: string,
-  options: { page?: number; language?: string } = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.searchMulti(query, options),
-    queryFn: () => searchMulti(query, options),
-    enabled: queryOptions.enabled !== false && !!query.trim(),
-    staleTime: queryOptions.staleTime ?? 5 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-// Details hooks
-export function useMovieDetails(
-  movieId: number,
-  options: DetailOptions = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.movieDetails(movieId, options),
-    queryFn: () => getMovieDetails(movieId, options),
-    enabled: queryOptions.enabled !== false && !!movieId,
-    staleTime: queryOptions.staleTime ?? 10 * 60 * 1000, // 10 minutes - details change less frequently
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-export function useTVShowDetails(
-  tvId: number,
-  options: DetailOptions = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.tvDetails(tvId, options),
-    queryFn: () => getTVShowDetails(tvId, options),
-    enabled: queryOptions.enabled !== false && !!tvId,
-    staleTime: queryOptions.staleTime ?? 10 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-// Credits hooks
-export function useMovieCredits(
-  movieId: number,
-  options: { language?: string } = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.movieCredits(movieId, options),
-    queryFn: () => getMovieCredits(movieId, options),
-    enabled: queryOptions.enabled !== false && !!movieId,
-    staleTime: queryOptions.staleTime ?? 15 * 60 * 1000, // 15 minutes - credits rarely change
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-export function useTVShowCredits(
-  tvId: number,
-  options: { language?: string } = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.tvCredits(tvId, options),
-    queryFn: () => getTVShowCredits(tvId, options),
-    enabled: queryOptions.enabled !== false && !!tvId,
-    staleTime: queryOptions.staleTime ?? 15 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-// Discover hooks with infinite query support
-export function useDiscoverMovies(
-  options: Record<string, unknown> = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useInfiniteQuery({
-    queryKey: tmdbKeys.discoverMovies(options),
-    queryFn: ({ pageParam = 1 }) =>
-      discoverMovies({ ...options, page: pageParam }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage: TMDBDiscoverMovieResponse) => {
-      if (lastPage.page < lastPage.total_pages) {
-        return lastPage.page + 1;
-      }
-      return undefined;
-    },
-    enabled: queryOptions.enabled !== false,
-    staleTime: queryOptions.staleTime ?? 5 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-export function useDiscoverTVShows(
-  options: Record<string, unknown> = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useInfiniteQuery({
-    queryKey: tmdbKeys.discoverTVShows(options),
-    queryFn: ({ pageParam = 1 }) =>
-      discoverTVShows({ ...options, page: pageParam }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage: TMDBDiscoverTVResponse) => {
-      if (lastPage.page < lastPage.total_pages) {
-        return lastPage.page + 1;
-      }
-      return undefined;
-    },
-    enabled: queryOptions.enabled !== false,
-    staleTime: queryOptions.staleTime ?? 5 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-// Utility hooks
+// Genre hook
 export function useGenres(
   type: 'movie' | 'tv',
   language = 'en-US',
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
+  queryOptions?: Omit<UseQueryOptions<TMDBGenreList>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: tmdbKeys.genreList(type, language),
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        type,
-        language,
-      });
-
-      const response = await fetch(`/api/genres?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch genres');
-      }
-      return response.json();
-    },
-    enabled: queryOptions.enabled !== false,
-    staleTime: queryOptions.staleTime ?? 24 * 60 * 60 * 1000, // 24 hours - genres rarely change
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-export function useTrending(
-  mediaType: 'movie' | 'tv' | 'person' | 'all',
-  timeWindow: 'day' | 'week' = 'week',
-  options: { page?: number; language?: string } = {},
-  queryOptions: {
-    enabled?: boolean;
-    staleTime?: number;
-  } = {}
-) {
-  return useQuery({
-    queryKey: tmdbKeys.trendingList(mediaType, timeWindow, options),
-    queryFn: () => getTrending(mediaType, timeWindow, options),
-    enabled: queryOptions.enabled !== false,
-    staleTime: queryOptions.staleTime ?? 30 * 60 * 1000, // 30 minutes - trending changes frequently
-    retry: (failureCount, error) => {
-      if (
-        error instanceof TMDBApiError &&
-        (error.statusCode < 500 || error.isRateLimit)
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-}
-
-// Utility functions for cache management
-export function prefetchMovieDetails(
-  queryClient: QueryClient,
-  movieId: number,
-  options: DetailOptions = {}
-) {
-  return queryClient.prefetchQuery({
-    queryKey: tmdbKeys.movieDetails(movieId, options),
-    queryFn: () => getMovieDetails(movieId, options),
-    staleTime: 10 * 60 * 1000,
-  });
-}
-
-export function prefetchTVShowDetails(
-  queryClient: QueryClient,
-  tvId: number,
-  options: DetailOptions = {}
-) {
-  return queryClient.prefetchQuery({
-    queryKey: tmdbKeys.tvDetails(tvId, options),
-    queryFn: () => getTVShowDetails(tvId, options),
-    staleTime: 10 * 60 * 1000,
-  });
-}
-
-// Cache invalidation helpers
-export function invalidateSearchCache(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({
-    queryKey: tmdbKeys.search(),
-  });
-}
-
-export function invalidateMovieCache(
-  queryClient: QueryClient,
-  movieId?: number
-) {
-  if (movieId) {
-    return queryClient.invalidateQueries({
-      queryKey: [...tmdbKeys.details(), 'movie', movieId],
-    });
-  }
-  return queryClient.invalidateQueries({
-    queryKey: [...tmdbKeys.details(), 'movie'],
-  });
-}
-
-export function invalidateTVCache(queryClient: QueryClient, tvId?: number) {
-  if (tvId) {
-    return queryClient.invalidateQueries({
-      queryKey: [...tmdbKeys.details(), 'tv', tvId],
-    });
-  }
-  return queryClient.invalidateQueries({
-    queryKey: [...tmdbKeys.details(), 'tv'],
+    queryKey: ['genres', type, language],
+    queryFn: () => createTMDBClient().genres.get(type, language),
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours (genres don't change often)
+    gcTime: 48 * 60 * 60 * 1000, // 48 hours
+    ...queryOptions,
   });
 }

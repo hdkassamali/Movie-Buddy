@@ -55,6 +55,7 @@ export default function DashboardPage() {
           <FeatureCard
             title="My Lists"
             description="Create and manage your movie watchlists"
+            onClick={() => router.push('/lists')}
           />
           <FeatureCard
             title="Search Movies"

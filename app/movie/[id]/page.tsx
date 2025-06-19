@@ -7,6 +7,7 @@ import OverviewSection from '@/components/OverviewSection/OverviewSection';
 import CastGrid from '@/components/CastGrid/CastGrid';
 import CrewSection from '@/components/CrewSection/CrewSection';
 import ProductionCompanies from '@/components/ProductionCompanies/ProductionCompanies';
+import { AddToListSection } from '@/components/AddToListSection/AddToListSection';
 
 interface MoviePageProps {
   params: Promise<{
@@ -87,16 +88,19 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <MetadataCard
-              posterUrl={posterUrl || undefined}
-              title={movie.title}
-              rating={movie.vote_average}
-              voteCount={movie.vote_count}
-              genres={movie.genres}
-              releaseDate={movie.release_date}
-              status={movie.status}
-              metadata={metadata}
-            />
+            <div className="lg:col-span-1">
+              <AddToListSection tmdbId={movieId} mediaType="movie" />
+              <MetadataCard
+                posterUrl={posterUrl || undefined}
+                title={movie.title}
+                rating={movie.vote_average}
+                voteCount={movie.vote_count}
+                genres={movie.genres}
+                releaseDate={movie.release_date}
+                status={movie.status}
+                metadata={metadata}
+              />
+            </div>
 
             <div className="lg:col-span-2 space-y-8">
               <OverviewSection overview={movie.overview} />
