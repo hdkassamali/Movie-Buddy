@@ -10,9 +10,9 @@ import ProductionCompanies from '@/components/ProductionCompanies/ProductionComp
 import SeasonsSection from '@/components/SeasonsSection/SeasonsSection';
 
 interface TVShowPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({

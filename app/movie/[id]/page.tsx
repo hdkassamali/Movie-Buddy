@@ -9,9 +9,9 @@ import CrewSection from '@/components/CrewSection/CrewSection';
 import ProductionCompanies from '@/components/ProductionCompanies/ProductionCompanies';
 
 interface MoviePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({
