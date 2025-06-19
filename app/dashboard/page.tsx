@@ -3,6 +3,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import UserInfoCard from '@/components/UserInfoCard/UserInfoCard';
+import FeatureCard from '@/components/FeatureCard/FeatureCard';
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
@@ -39,71 +41,29 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold text-white">Dashboard</h1>
           <button
             onClick={handleSignOut}
-            className="bg-red-500/20 hover:bg-red-500/30 text-red-100 px-4 py-2 rounded-lg border border-red-500/50 transition-colors"
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-100 px-4 py-2 rounded-lg border border-red-500/50 transition-colors hover:cursor-pointer"
           >
             Sign Out
           </button>
         </div>
 
         {/* Welcome Message */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20 mb-8">
-          <h2 className="text-2xl font-semibold text-white mb-4">
-            Welcome back!
-          </h2>
-          <div className="space-y-2 text-blue-100">
-            <p>
-              <strong>Email:</strong> {user.email}
-            </p>
-            <p>
-              <strong>User ID:</strong> {user.id}
-            </p>
-            {user.user_metadata?.username && (
-              <p>
-                <strong>Username:</strong> {user.user_metadata.username}
-              </p>
-            )}
-            <p>
-              <strong>Account created:</strong>{' '}
-              {new Date(user.created_at).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
+        <UserInfoCard user={user} />
 
         {/* Placeholder Features */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white/5 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">My Lists</h3>
-            <p className="text-blue-100 text-sm mb-4">
-              Create and manage your movie watchlists
-            </p>
-            <button className="text-blue-300 hover:text-blue-200 text-sm font-medium">
-              Coming Soon →
-            </button>
-          </div>
-
-          <div className="bg-white/5 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">
-              Search Movies
-            </h3>
-            <p className="text-blue-100 text-sm mb-4">
-              Discover new movies and TV shows
-            </p>
-            <button className="text-blue-300 hover:text-blue-200 text-sm font-medium">
-              Coming Soon →
-            </button>
-          </div>
-
-          <div className="bg-white/5 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">
-              My Ratings
-            </h3>
-            <p className="text-blue-100 text-sm mb-4">
-              Rate and review your watched content
-            </p>
-            <button className="text-blue-300 hover:text-blue-200 text-sm font-medium">
-              Coming Soon →
-            </button>
-          </div>
+          <FeatureCard
+            title="My Lists"
+            description="Create and manage your movie watchlists"
+          />
+          <FeatureCard
+            title="Search Movies"
+            description="Discover new movies and TV shows"
+          />
+          <FeatureCard
+            title="My Ratings"
+            description="Rate and review your watched content"
+          />
         </div>
       </div>
     </div>
