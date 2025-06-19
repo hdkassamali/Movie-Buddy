@@ -5,15 +5,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
 
 export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { signUp, loading } = useAuth();
 
   const {
     register,
@@ -24,26 +23,17 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
     setError(null);
     setSuccess(false);
     console.log('Registering user:', data);
 
     try {
-      // First, sign up the user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp(
-        {
-          email: data.email,
-          password: data.password,
-          options: {
-            data: {
-              username: data.username,
-            },
-          },
-        }
+      const { error: signUpError } = await signUp(
+        data.email,
+        data.password,
+        data.username
       );
-      console.log('Auth data:', authData);
-      console.log('Outside Sign up error:', signUpError);
+      console.log('Sign up error:', signUpError);
 
       if (signUpError) {
         setError(signUpError.message);
@@ -51,21 +41,17 @@ export default function RegisterPage() {
         return;
       }
 
-      if (authData.user) {
-        // User profile is automatically created by the handle_new_user trigger
-        console.log('Auth user created successfully:', authData.user);
-        setSuccess(true);
+      // User profile is automatically created by the handle_new_user trigger
+      console.log('User created successfully');
+      setSuccess(true);
 
-        // Redirect after a short delay to show success message
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
-      }
+      // Redirect after a short delay to show success message
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Registration error:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -138,7 +124,7 @@ export default function RegisterPage() {
                 id="email"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                 placeholder="Enter your email"
-                disabled={isLoading}
+                disabled={loading}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-300">
@@ -161,7 +147,7 @@ export default function RegisterPage() {
                 id="username"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                 placeholder="Choose a username"
-                disabled={isLoading}
+                disabled={loading}
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-red-300">
@@ -184,7 +170,7 @@ export default function RegisterPage() {
                 id="password"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                 placeholder="Create a strong password"
-                disabled={isLoading}
+                disabled={loading}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-300">
@@ -207,7 +193,7 @@ export default function RegisterPage() {
                 id="confirmPassword"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                 placeholder="Confirm your password"
-                disabled={isLoading}
+                disabled={loading}
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-300">
@@ -219,10 +205,10 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
