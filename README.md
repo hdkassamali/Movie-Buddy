@@ -6,23 +6,24 @@ A full-stack web application for tracking your favorite movies and TV shows. Bui
 
 [**View Live App**](https://movie-buddy-sigma.vercel.app/)
 
-## ✨ Features (Planned)
+## ✨ Features
 
-- **🔍 Search & Discovery**: Find movies and TV shows using The Movie Database (TMDB) API
-- **📋 Personal Watchlists**: Create and manage custom lists of your favorite content
-- **⭐ Rating & Reviews**: Rate movies and TV shows with a 5-star system and write reviews
-- **📊 Watch Status**: Track what you're currently watching, want to watch, or have completed
-- **📱 Responsive Design**: Beautiful, modern UI that works on all devices
-- **🔐 User Authentication**: Secure user accounts with Supabase Auth
-- **⚡ Real-time Updates**: Live updates across all your devices
+- **🔍 Search & Discovery**: Find movies and TV shows using The Movie Database (TMDB) API ✅
+- **🔐 User Authentication**: Secure user accounts with Supabase Auth ✅
+- **📱 Responsive Design**: Beautiful, modern UI that works on all devices ✅
+- **📋 Personal Watchlists**: Create and manage custom lists of your favorite content - *Coming Soon*
+- **⭐ Rating & Reviews**: Rate movies and TV shows with a 5-star system and write reviews - *Coming Soon*
+- **📊 Watch Status**: Track what you're currently watching, want to watch, or have completed - *Coming Soon*
+- **⚡ Real-time Updates**: Live updates across all your devices - *Coming Soon*
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS v4
-- **Database**: Supabase (PostgreSQL) - *Coming Soon*
-- **Authentication**: Supabase Auth - *Coming Soon*
-- **External API**: The Movie Database (TMDB) - *Coming Soon*
+- **Database**: Supabase (PostgreSQL) ✅
+- **Authentication**: Supabase Auth ✅
+- **External API**: The Movie Database (TMDB) ✅
+- **State Management**: React Query (TanStack Query) ✅
 - **Deployment**: Vercel ✅
 - **Development**: ESLint, Prettier ✅
 
@@ -33,7 +34,7 @@ A full-stack web application for tracking your favorite movies and TV shows. Bui
 - Node.js 18+ 
 - npm or yarn
 - Supabase account
-- TMDB API key
+- TMDB API key (free at [themoviedb.org](https://www.themoviedb.org/settings/api))
 
 ### Installation
 
@@ -48,12 +49,30 @@ A full-stack web application for tracking your favorite movies and TV shows. Bui
    npm install
    ```
 
-3. **Run the development server**
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   Then edit `.env.local` and add your credentials:
+   ```bash
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # TMDB API Configuration
+   TMDB_API_KEY=your_tmdb_api_key
+   ```
+
+4. **Set up database schema**
+   - Follow the instructions in [`migrations/README.md`](./migrations/README.md)
+   - Execute the SQL migration in your Supabase SQL Editor
+
+5. **Run the development server**
    ```bash
    npm run dev
    ```
 
-4. **Open [http://localhost:3000](http://localhost:3000)** in your browser
+6. **Open [http://localhost:3000](http://localhost:3000)** in your browser
 
 ## 🗄️ Database Schema
 
@@ -83,7 +102,10 @@ This app is automatically deployed to Vercel with CI/CD:
 
 1. **Push to main branch** triggers automatic deployment ✅
 2. **Preview deployments** are created for pull requests ✅
-3. **Environment variables** will be configured in Vercel dashboard
+3. **Environment variables** configured in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` 
+   - `TMDB_API_KEY`
 
 ## 🤝 Contributing
 
